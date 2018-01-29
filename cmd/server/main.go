@@ -3,16 +3,16 @@ package main
 import (
 	"net/http"
 	"log"
-	"fmt"
-	"html"
-	"github.com/lucasponce/swiftsunshine/version"
+	"flag"
+
+	"github.com/lucasponce/swiftsunshine/prometheus"
 )
 
 func main() {
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Hello Sunshine, %q \n", html.EscapeString(r.URL.Path))
-		fmt.Fprintf(w, "Version [%q]", version.String())
-	})
+	bindAddr := flag.String("bindAddr", ":8080", "Address to bind to for serving")
+	prometheusAddr := flag.String("prometheusAddr", "http://localhost:9090", "Address of prometheus instance for graph generation")
+	flag.Parse()
 
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	http.Handle("/", prometheus.NewQueryHandler(*prometheusAddr))
+	log.Fatal(http.ListenAndServe(*bindAddr, nil))
 }
